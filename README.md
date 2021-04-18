@@ -1,10 +1,3 @@
-
-
-### Credits ###
-
-Ram Durairajan, Steven Walton, Joe Istas, Michal Yong
-
-
 ### INFORMATION ###
 
 Author: Alexa Roskowski, aroskows@ureogon.edu
