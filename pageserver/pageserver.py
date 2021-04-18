@@ -22,6 +22,8 @@ log = logging.getLogger(__name__)
 
 import socket    # Basic TCP/IP communication on the internet
 import _thread   # Response computation runs concurrently with main program
+import os
+#import codecs
 
 
 def listen(portnum):
@@ -66,6 +68,7 @@ def serve(sock, func):
 CAT = """
      ^ ^
    =(   )=
+this is cat!
 """
 
 # HTTP response codes, as the strings we will actually send.
@@ -90,7 +93,29 @@ def respond(sock):
     log.info("Request was {}\n***\n".format(request))
 
     parts = request.split()
-    if len(parts) > 1 and parts[0] == "GET":
+    
+    #log.info(str(parts[1]))
+    #log.info(str(parts))
+    
+    options = get_options()
+    docroot_list = os.listdir(options.DOCROOT)
+    #log.info(type(options.DOCROOT))
+    path = options.DOCROOT + str(parts[1])[1:]
+    #log.info(path)
+    
+    if str(parts[1]) == "/favicon.ico":
+        pass
+    elif "~" in str(parts[1]) or "//" in str(parts[1]) or ".." in str(parts[1]):
+        transmit(STATUS_FORBIDDEN, sock)
+    elif str(parts[1])[-5:] == ".html" or str(parts[1])[-4:] == ".css":
+        if str(parts[1])[1:] not in docroot_list:
+            transmit(STATUS_NOT_FOUND, sock)
+        elif str(parts[1])[1:] in docroot_list:
+            transmit(STATUS_OK, sock)
+            f = open(path, "r")
+            transmit(f.read(), sock)
+
+    elif len(parts) > 1 and parts[0] == "GET":
         transmit(STATUS_OK, sock)
         transmit(CAT, sock)
     else:
@@ -126,7 +151,6 @@ def get_options():
     #   on conflict, the last value read has precedence
     options = config.configuration()
     # We want: PORT, DOCROOT, possibly LOGGING
-
     if options.PORT <= 1000:
         log.warning(("Port {} selected. " +
                          " Ports 0..1000 are reserved \n" +
